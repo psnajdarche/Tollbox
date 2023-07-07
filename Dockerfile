@@ -1,41 +1,39 @@
-# Use a base image with Python pre-installed
-FROM ubuntu:latest
+FROM ubuntu
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    USER=pavle \
-    HOME=/home/$USER \
-    PATH=/home/$USER/bin:$PATH
 
-# Install dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        curl \
-        ca-certificates \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
-   
+RUN apt-get update && apt-get install -y --no-install-recommends \
+python3.5 \
+python3-pip \
+python3-setuptools \
+curl \
+sudo \
+nano \
+unzip \
+wget \
+&& \
+apt-get clean && \
+rm -rf /var/lib/apt/lists/*
+RUN pip3 install --upgrade pip
+RUN 
+RUN case "$( uname -m )" in \
+    'x86_64') \
+        pip3 install ansible && \
+        wget https://releases.hashicorp.com/terraform/1.0.7/terraform_1.0.7_linux_amd64.zip && \
+        unzip terraform_1.0.7_linux_amd64.zip && \
+        mv terraform /usr/local/bin/ && \
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+        ;; \
+    'aarch64') \
+        wget https://releases.hashicorp.com/terraform/1.5.2/terraform_1.5.2_linux_arm64.zip && \
+        unzip terraform_1.5.2_linux_arm64.zip && \
+        mv terraform /usr/local/bin/ && \
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && \
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+        ;; \
+    esac
 
-# Install Ansible
-RUN pip install ansible
+RUN useradd -m -s /bin/bash pavle
+USER pavle 
 
-# Install kubectl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
-    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
-    && rm kubectl
-# Install tera
-RUN curl -LO https://releases.hashicorp.com/terraform/0.15.4/terraform_0.15.4_linux_amd64.zip \
-    && unzip terraform_0.15.4_linux_amd64.zip \
-    && mv terraform $HOME/bin \
-    && rm terraform_0.15.4_linux_amd64.zip
-# Create a non-root user
-RUN useradd -ms /bin/bash $USER
-
-# Set the working directory and ownership
-WORKDIR /app
-RUN chown -R $USER:$USER /app
-
-# Switch to the non-root user
-USER $USER
-
-#
 CMD ["/bin/bash"]
