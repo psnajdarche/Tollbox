@@ -13,8 +13,7 @@ wget \
 && \
 apt-get clean && \
 rm -rf /var/lib/apt/lists/*
-RUN pip3 install --upgrade pip
-RUN 
+RUN pip3 install --upgrade pip 
 RUN case "$( uname -m )" in \
     'x86_64') \
         pip3 install ansible && \
@@ -25,6 +24,7 @@ RUN case "$( uname -m )" in \
         install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
         ;; \
     'aarch64') \
+        pip3 install ansible && \
         wget https://releases.hashicorp.com/terraform/1.5.2/terraform_1.5.2_linux_arm64.zip && \
         unzip terraform_1.5.2_linux_arm64.zip && \
         mv terraform /usr/local/bin/ && \
